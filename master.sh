@@ -1,5 +1,9 @@
 sudo apt update
+
+# Off swap, Mặc định thì Kubelet nó không thể hoạt động nếu phát hiện swap trên các node
 sudo swapoff -a
+
+
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
@@ -21,6 +25,8 @@ lsmod | grep overlay
 
 sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
 
+
+#Container runtime ở đây sử dụng là containerd
 wget https://github.com/containerd/containerd/releases/download/v1.7.18/containerd-1.7.18-linux-amd64.tar.gz
 
 sudo tar Cxzvf /usr/local containerd-1.7.18-linux-amd64.tar.gz
@@ -55,8 +61,8 @@ WantedBy=multi-user.target
 EOF'
 
 
-systemctl daemon-reload
-systemctl enable --now containerd
+sudo systemctl daemon-reload
+sudo systemctl enable --now containerd
 
 wget https://github.com/opencontainers/runc/releases/download/v1.2.0-rc.1/runc.amd64
 
@@ -73,6 +79,8 @@ sudo containerd config default | sudo tee /etc/containerd/config.toml
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
 sudo systemctl restart containerd
 
+
+#  Vì các component giao tiếp qua TLS nên phải có cert
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
@@ -83,22 +91,25 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 
 sudo apt-get update
 
+
+# Cài đặt Kubeadm , kubelet , kubectl
 sudo apt-get install -y kubelet kubeadm kubectl
 
 sudo apt-mark hold kubelet kubeadm kubectl
 
 sudo systemctl enable --now kubelet
 
-sudo su
 
+
+sudo su
 echo 'KUBELET_EXTRA_ARGS="--node-ip=192.168.56.70"' >> /etc/default/kubelet
 
 echo 'KUBELET_EXTRA_ARGS="--node-ip=192.168.56.80"' >> /etc/default/kubelet
 
 
-#SSH
-sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# #SSH
+# sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-sudo systemctl restart sshd
+# sudo systemctl restart sshd
 
-echo "SSH password authentication enabled."
+# echo "SSH password authentication enabled."

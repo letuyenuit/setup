@@ -1,0 +1,17 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: Reset the cluster
+      shell: kubeadm reset --force
+
+    - name: Remove the cluster
+      shell: rm -rf /home/vagrant/.kube
+
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Reset the cluster
+      shell: kubeadm reset --force
+
+    - name: Remove the cluster
+      shell: rm -rf /home/vagrant/.kube

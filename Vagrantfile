@@ -7,7 +7,6 @@ Vagrant.configure("2") do |config|
         vb.memory = 4096
         vb.cpus = 2
     end
-    master.vm.provision "shell", path: "master.sh"
   end
 
   config.vm.define "node1" do |node1|
@@ -18,7 +17,6 @@ Vagrant.configure("2") do |config|
         vb.memory = 4096
         vb.cpus = 1
     end
-    node1.vm.provision "shell", path: "common.sh"
   end
 
   config.vm.define "jenkins" do |jenkins|
@@ -31,25 +29,45 @@ Vagrant.configure("2") do |config|
     end
     jenkins.vm.provision "shell", path: "jenkins.sh"
   end
+  config.vm.define "agent" do |agent|
+    agent.vm.box = "ubuntu/focal64"
+    agent.vm.hostname = "agent"
+    agent.vm.network "private_network", ip: "192.168.56.95"
+    agent.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 1
+    end
+  end
 
-  # config.vm.define "backstage" do |backstage|
-  #   backstage.vm.box = "ubuntu/focal64"
-  #   backstage.vm.hostname = "backstage"
-  #   backstage.vm.network "private_network", ip: "192.168.56.100"
-  #   backstage.vm.provider "virtualbox" do |vb|
-  #       vb.memory = 8092
-  #       vb.cpus = 1
-  #   end
-  # end
-
-  # config.vm.define "postgresql" do |postgresql|
-  #   postgresql.vm.box = "ubuntu/focal64"
-  #   postgresql.vm.hostname = "postgresql"
-  #   postgresql.vm.network "private_network", ip: "192.168.56.110"
-  #   postgresql.vm.provider "virtualbox" do |vb|
-  #       vb.memory = 3072
-  #       vb.cpus = 1
-  #   end
-  # end
+  config.vm.define "ansible" do |ansible|
+    ansible.vm.box = "ubuntu/focal64"
+    ansible.vm.hostname = "ansible"
+    ansible.vm.network "private_network", ip: "10.10.10.10"
+    ansible.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 1
+    end
+    ansible.vm.disk :disk, name: "backup", size: "1GB"
+    ansible.vm.disk :disk, name: "lvm", size: "1GB"
+    ansible.vm.disk :disk, name: "extend", size: "1GB"
+  end
+  config.vm.define "webserver" do |webserver|
+    webserver.vm.box = "ubuntu/focal64"
+    webserver.vm.hostname = "webserver"
+    webserver.vm.network "private_network", ip: "10.10.10.11"
+    webserver.vm.provider "virtualbox" do |vb|
+        vb.memory = 1024
+        vb.cpus = 1
+    end
+  end
+  config.vm.define "dbserver" do |dbserver|
+    dbserver.vm.box = "ubuntu/focal64"
+    dbserver.vm.hostname = "dbserver"
+    dbserver.vm.network "private_network", ip: "10.10.10.12"
+    dbserver.vm.provider "virtualbox" do |vb|
+        vb.memory = 1024
+        vb.cpus = 1
+    end
+  end
 end
 

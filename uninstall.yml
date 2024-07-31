@@ -1,0 +1,24 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Unhold
+      shell: |
+        apt-mark unhold kubeadm kubectl kubelet
+
+    - name: Uninstall Kubeadm, Kubectl, and Kubelet
+      shell: apt-get purge kubeadm kubectl kubelet kubernetes-cni kube* -y
+
+    - name: Remove Configuration & Data
+      shell: |
+        rm -rf ~/.kube
+        rm -rf /etc/cni
+        rm -rf /etc/kubernetes
+        rm -rf /var/lib/etcd
+        rm -rf /var/lib/kubelet
+
+    - name: Restart Iptables
+      shell: |
+        iptables -F
+        iptables -t nat -F
+        iptables -t mangle -F
+        iptables -X

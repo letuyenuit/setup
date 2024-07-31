@@ -1,0 +1,75 @@
+---
+- hosts: master
+  become: yes
+  tasks:
+    - name: Unhold kubeadm
+      ansible.builtin.shell: apt-mark unhold kubeadm
+
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install specific version of kubeadm
+      shell: apt-get install -y kubeadm=1.29.7-1.1
+
+    - name: Hold kubeadm package
+      ansible.builtin.shell: apt-mark hold kubeadm
+
+    - name: Apply kubeadm upgrade
+      ansible.builtin.shell: kubeadm upgrade apply v1.29.7 -y
+
+    - name: Drain master node
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl drain master --ignore-daemonsets --delete-local-data
+
+    - name: Unhold kubelet and kubectl
+      ansible.builtin.shell: apt-mark unhold kubelet kubectl
+
+    - name: Install specific version of kubelet and kubectl
+      shell: apt-get install -y kubelet=1.29.7-1.1 kubectl=1.29.7-1.1
+
+    - name: Hold kubelet and kubectl packages
+      ansible.builtin.shell: apt-mark hold kubelet kubectl
+
+    - name: Reload systemd daemon , kubelet
+      ansible.builtin.shell: systemctl daemon-reload && systemctl restart kubelet
+
+    - name: Uncordon master node
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl uncordon master
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Unhold kubeadm
+      ansible.builtin.shell: apt-mark unhold kubeadm
+
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install specific version of kubeadm
+      shell: apt-get install -y kubeadm=1.29.7-1.1
+
+    - name: Hold kubeadm package
+      ansible.builtin.shell: apt-mark hold kubeadm
+
+    - name: Apply kubeadm upgrade
+      ansible.builtin.shell: kubeadm upgrade node
+
+    - name: Drain worker node
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl drain node1 --ignore-daemonsets
+
+    - name: Unhold kubelet and kubectl
+      ansible.builtin.shell: apt-mark unhold kubelet kubectl
+
+    - name: Install specific version of kubelet and kubectl
+      shell: apt-get install -y kubelet=1.29.7-1.1 kubectl=1.29.7-1.1
+
+    - name: Hold kubelet and kubectl packages
+      ansible.builtin.shell: apt-mark hold kubelet kubectl
+
+    - name: Reload systemd daemon
+      shell: |
+        systemctl daemon-reload
+        systemctl restart kubelet
+
+    - name: Uncordon worker node
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl uncordon node1

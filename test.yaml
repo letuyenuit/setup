@@ -1,0 +1,18 @@
+---
+- hosts: master
+  become: yes
+  #gather_facts: no
+  tasks:
+    - name: Nginx hellooo world
+      template:
+        src: index.html
+        dest: /var/www/html/index.html
+        mode: 0777
+        backup: yes
+      notify: Restart nginx
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
